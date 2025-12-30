@@ -1,16 +1,15 @@
 <?php
 
+use App\Http\Controllers\Api\AiBlogController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\CourseController;
-use App\Http\Controllers\Api\VideoController;
+use App\Http\Controllers\Api\BlogCategoryController;
+use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\CenterController;
-use App\Http\Controllers\Api\CommentController;
-use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\PaymentApiController;
-use App\Http\Controllers\Api\ShareController;
-use App\Http\Controllers\Api\StatsController;
+use App\Http\Controllers\Api\BlogPostController;
+use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\LeaveRequestController;
 
 // ====================================
 // PUBLIC ROUTES (NO LOGIN REQUIRED)
@@ -25,71 +24,58 @@ Route::get('/categories/{category}', [CategoryController::class, 'show']); // GE
 
 
 
-Route::get('centers/count', [CenterController::class, 'count']);
-Route::apiResource('centers', CenterController::class)->only(['index', 'show']);
 
-// Courses (public index + show)
- Route::get('courses/without-videos', [CourseController::class, 'noVideos']);
 Route::get('courses/count', [CategoryController::class, 'count']);
-Route::apiResource('courses', CourseController::class)->only(['index', 'show']);
 
-// COMMENTS: READ = PUBLIC, WRITE = PROTECTED
-Route::get('comments', [CommentController::class, 'index']);        // ← Public: everyone sees
-Route::get('likes', [LikeController::class, 'show']);               // ← Public
-Route::get('shares/count', [ShareController::class, 'count']);      // ← Public
 
 // Auth (public)
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::get('/categories', [BlogCategoryController::class, 'index']);
 
 
 Route::get('/payment/callback', [PaymentApiController::class, 'callback']);
+Route::get('/payment/callback', [PaymentApiController::class, 'callback']);
 
-// ====================================
-// PROTECTED ROUTES (REQUIRES LOGIN)
-// ====================================
+/*
+|--------------------------------------------------------------------------
+| PUBLIC BLOG ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::apiResource('posts', BlogPostController::class)
+    ->only(['index', 'show']);
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN BLOG ROUTES (SANCTUM)
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth:sanctum')->group(function () {
-Route::post('categories', [CategoryController::class, 'store']);
-Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
 
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me/enrolled-courses', [AuthController::class, 'enrolledCourses']);
-    Route::put('/me/profile', [AuthController::class, 'updateProfile']);
-    // Route::post('/me/profile', [AuthController::class, 'updateProfile']);
-
-
-
-    Route::middleware('auth:sanctum')->post('/payment/initialize', [PaymentApiController::class, 'initialize']);
+    Route::apiResource('posts', BlogPostController::class)
+        ->except(['index', 'show', 'create', 'edit']);
+    Route::delete('/posts/{post:uuid}', [BlogPostController::class, 'destroy']);
+    Route::post('posts/{post}/publish', [BlogPostController::class, 'publish']);
+    Route::post('posts/{post}/unpublish', [BlogPostController::class, 'unpublish']);
+    Route::apiResource('employees', EmployeeController::class);
 
 
 
-    // ONLY LOGGED-IN USERS CAN POST COMMENTS
-    Route::get('stats', [StatsController::class, 'index']);     // ← PROTECTED
-    Route::post('comments', [CommentController::class, 'store']);     // ← PROTECTED
 
-    // Likes & Shares (require login)
-    Route::post('likes/toggle', [LikeController::class, 'toggle']);
-    Route::post('shares', [ShareController::class, 'store']);
-
-    // Admin routes...
-    // Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])
-    //  ->name('api.courses.edit');
-    Route::put('/courses/{id}/update', [CourseController::class, 'update'])
-     ->name('api.courses.update');
-     
-
-     Route::get('/courses/{id}/edit', [CourseController::class, 'edit'])
-     ->name('api.courses.edit');
-    Route::apiResource('courses', CourseController::class)->except(['index', 'show']);
-    Route::apiResource('centers', CenterController::class)->except(['index', 'show', 'count']);
-
-    Route::put('courses/{course}/toggle-publish', [CourseController::class, 'togglePublish']);
-    Route::put('courses/{course}/publish', [CourseController::class, 'publish']);
-    Route::get('courses/{course}/watch', [CourseController::class, 'watch']);
-   Route::apiResource('videos', VideoController::class)->only(['index', 'show', 'update', 'destroy']);
-    Route::post('videos', [VideoController::class, 'store']);
-    Route::put('videos/{video}/toggle-publish', [VideoController::class, 'togglePublish']);
-
-
+    Route::middleware('auth:sanctum')->group(function () {
+    // Leave Requests
+    Route::get('leaves', [LeaveRequestController::class, 'index']); // Admin view
+    Route::post('leaves', [LeaveRequestController::class, 'store']); // Employee apply
+    Route::patch('leaves/{leaveRequest}/status', [LeaveRequestController::class, 'updateStatus']); // Admin action
+    Route::get('my-leaves', [LeaveRequestController::class, 'myHistory']);
+    Route::get('leave-balances', [LeaveRequestController::class, 'myBalances']);
+    // Stats for the Top Cards
+    Route::get('leave-stats', function() {
+        return [
+            'total' => \App\Models\LeaveRequest::count(),
+            'approved' => \App\Models\LeaveRequest::where('status', 'approved')->count(),
+            'pending' => \App\Models\LeaveRequest::where('status', 'pending')->count(),
+            'rejected' => \App\Models\LeaveRequest::where('status', 'rejected')->count(),
+        ];
+    });
 });
-
+});
