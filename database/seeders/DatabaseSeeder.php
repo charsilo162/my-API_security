@@ -18,16 +18,24 @@ class DatabaseSeeder extends Seeder
         $this->faker = Faker::create();
     }
 
-    public function run(): void
-    {
-        /*
-        |--------------------------------------------------------------------------
-        | 1. CORE TABLE DATA (ONLY 4 EACH)
-        |--------------------------------------------------------------------------
-        */
+ public function run(): void
+{
+    // Admins
+    // \App\Models\User::factory()->admin()->count(2)->create();
 
-    User::factory(4)->create();
-        // Category::factory(4)->create();
+    // // Employees
+    // \App\Models\User::factory()->employee()->count(10)->create();
+    // \App\Models\Employee::factory()->count(10)->create();
 
-    }
+    // Clients
+    //\App\Models\User::factory()->client()->count(5)->create();
+    \App\Models\Client::factory()->count(5)->create();
+
+    // Service Requests
+    \App\Models\ServiceRequest::factory()->count(10)->create();
+
+    // Assign employees to requests
+    \App\Models\ServiceRequestAssignment::factory()->count(15)->create();
+}
+
 }

@@ -12,6 +12,7 @@ public function toArray(Request $request): array
     return [
         'id' => $this->id,
         'name' => $this->name,
+        'is_active' => $this->is_active,
         'color' => $this->color_code,
         'default_days' => $this->default_days,
     ];

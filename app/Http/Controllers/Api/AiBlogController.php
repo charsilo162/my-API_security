@@ -15,6 +15,12 @@ class AiBlogController extends Controller
 
 public function generate(Request $request, BlogAIService $ai)
 {
+               \Log::info('===  REQUEST START Ai===', [
+    
+
+        'input'     => $request->all(),
+       
+    ]);
     $validated = $request->validate([
         'topic' => 'required|string|min:5',
     ]);
@@ -43,6 +49,7 @@ public function generate(Request $request, BlogAIService $ai)
             'excerpt' => substr(strip_tags($item['summary'] ?? ''), 0, 160),
             'content' => $item['content'] . "\n\n" . ($item['conclusion'] ?? ''),
             'status'  => 'draft',
+            //'featured_image'   => $item['image_url'] ?? null,
         ]);
 
         // 3. Populate the pivot table (blog_category_post)

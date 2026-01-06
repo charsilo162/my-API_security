@@ -12,6 +12,10 @@ class LeaveRequest extends Model
         'total_days', 'reason', 'status', 'manager_remarks', 'approved_by'
     ];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date'   => 'date',
+    ];
     protected static function boot()
     {
         parent::boot();

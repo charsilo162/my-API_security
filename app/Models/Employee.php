@@ -1,52 +1,48 @@
 <?php
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 class Employee extends Model
 {
+        use HasFactory;
+            
 
-    
+            protected $fillable = [
+                'user_id',
+                'uuid',
+                'employee_code',
+                'designation',
+                'department',
+                'joining_date',
+                'account_holder_name',
+                'account_number',
+                'bank_name',
+                'branch_name',
+                'routing_number',
+                'swift_code',
+            ];
 
 
-    protected $fillable = [
-        'user_id',
-        'employee_code',
-        'first_name',
-        'last_name',
-        'email',
-        'phone',
-        'address',
-        'designation',
-        'department',
-        'joining_date',
-        'account_holder_name',
-        'account_number',
-        'bank_name',
-        'branch_name',
-        'routing_number',
-        'swift_code',
-        'photo_path',
-    ];
+        protected $casts = [
+            'joining_date' => 'date',
+        ];
 
-    protected $casts = [
-        'joining_date' => 'date',
-    ];
+        protected static function boot()
+        {
+            parent::boot();
+            static::creating(function ($model) {
+                $model->uuid = (string) Str::uuid();
+            });
+        }
 
-    protected static function boot()
-{
-    parent::boot();
-    static::creating(function ($model) {
-        $model->uuid = (string) Str::uuid();
-    });
-}
-
-// Ensure the API uses the UUID for route model binding
-public function getRouteKeyName()
-{
-    return 'uuid';
-}
+        // Ensure the API uses the UUID for route model binding
+        public function getRouteKeyName()
+        {
+            return 'uuid';
+        }
     /**
      * Automatic Employee Code Generation
      */
@@ -65,7 +61,7 @@ public function getRouteKeyName()
                 }
 
                 // Format: EMP + 6 digits (e.g., EMP000001)
-                $employee->employee_code = 'EMP' . str_pad($number, 6, '0', STR_PAD_LEFT);
+                $employee->employee_code = 'SEC-' . str_pad($number, 6, '0', STR_PAD_LEFT);
             }
         });
     }
